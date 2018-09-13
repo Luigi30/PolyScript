@@ -21,8 +21,6 @@ namespace PolyScript
 	extern Object *True;
 
 	typedef enum ObjectTag {
-		T_INT = 1,
-		T_FLOAT,
 		T_ATOM,
 		T_CELL,
 		//T_SYMBOL,
@@ -95,6 +93,14 @@ namespace PolyScript
 			};
 		};
 
+		bool IsAtomSubtype(AtomSubtype subtype)
+		{
+			if (tag == T_ATOM && subtype == subtype)
+				return true;
+			else
+				return false;
+		}
+
 		// Allocate a new Object.
 		static Object *alloc(ObjectTag type, size_t size)
 		{
@@ -118,7 +124,7 @@ namespace PolyScript
 
 		static Object *MakeFloat(double value)
 		{
-			Object *r = alloc(T_FLOAT, sizeof(double));
+			Object *r = alloc(T_ATOM, sizeof(double));
 			r->atom_subtype = AT_FLOAT;
 			r->float_value = value;
 			return r;

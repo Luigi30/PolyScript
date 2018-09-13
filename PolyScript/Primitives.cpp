@@ -24,14 +24,85 @@ namespace PolyScript
 				if(args->car->tag != T_ATOM)
 					error("+ takes only numbers");
 
-				if (args->car->atom_subtype == T_INT)
+				if (args->car->atom_subtype == AT_INT)
 					sum += args->car->value;
-
-				else if (args->car->atom_subtype == T_FLOAT)
+				else if (args->car->atom_subtype == AT_FLOAT)
 				{
 					sum += args->car->float_value;
 					promote_to_float = true;
 				}
+			}
+
+			if (promote_to_float)
+				return Object::MakeFloat(sum);
+			else
+				return Object::MakeInt((int)sum);
+		}
+
+		// (- <integer> ...)
+		Object *Minus(Object *env, Object *list) {
+
+			bool first_number = true;
+			bool promote_to_float = false;
+			double sum = 0;
+
+			for (Object *args = Evaluator::eval_list(env, list); args != Nil; args = args->cdr) {
+
+				if (args->car->tag != T_ATOM)
+					error("- takes only numbers");
+
+				if (first_number)
+				{
+					if (args->car->atom_subtype == AT_INT)
+						sum += args->car->value;
+					else if (args->car->atom_subtype == AT_FLOAT)
+					{
+						sum += args->car->float_value;
+						promote_to_float = true;
+					}
+
+					first_number = false;
+				}
+
+				else {
+					if (args->car->atom_subtype == AT_INT)
+						sum -= args->car->value;
+					else if (args->car->atom_subtype == AT_FLOAT)
+					{
+						sum -= args->car->float_value;
+						promote_to_float = true;
+					}
+				}
+
+			}
+
+			if (promote_to_float)
+				return Object::MakeFloat(sum);
+			else
+				return Object::MakeInt((int)sum);
+		}
+
+		// (- <integer> ...)
+		Object *Multiply(Object *env, Object *list) {
+
+			bool promote_to_float = false;
+			double sum = 0;
+
+			for (Object *args = Evaluator::eval_list(env, list); args != Nil; args = args->cdr) {
+
+				if (args->car->tag != T_ATOM)
+					error("- takes only numbers");
+
+				else {
+					if (args->car->atom_subtype == AT_INT)
+						sum *= args->car->value;
+					else if (args->car->atom_subtype == AT_FLOAT)
+					{
+						sum *= args->car->float_value;
+						promote_to_float = true;
+					}
+				}
+
 			}
 
 			if (promote_to_float)
@@ -112,16 +183,22 @@ namespace PolyScript
 				return Nil;
 			}
 
-			switch (x->tag)
+			if (x->tag == T_ATOM)
 			{
-			case T_INT:
-			case T_FLOAT:
-				return x->value == y->value ? True : Nil;
-			default:
-				// TODO: other object types
-				error("Only numerical equality is currently supported by eq");
-				return Nil;
+				switch (x->atom_subtype)
+				{
+				case AT_INT:
+				case AT_FLOAT:
+					return x->value == y->value ? True : Nil;
+				case AT_SYMBOL:
+					return x->name == y->name ? True : Nil;
+				default:
+					// TODO: other atom types
+					error("Only numerical and symbol equality is currently supported by eq");
+					return Nil;
+				}
 			}
+
 		}
 
 		///////////
@@ -130,6 +207,8 @@ namespace PolyScript
 		void create_primitives(Object *env)
 		{
 			add_primitive(env, "plus", Plus);
+			add_primitive(env, "minus", Minus);
+
 			add_primitive(env, "quote", Quote);
 			add_primitive(env, "list", List);
 			add_primitive(env, "defun", Defun);

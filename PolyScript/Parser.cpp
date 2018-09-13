@@ -161,12 +161,6 @@ namespace PolyScript
 					return;
 				}
 
-			case T_INT:
-				printf("%d", obj->value);
-				return;
-			case T_FLOAT:
-				printf("%f", obj->float_value);
-				return;
 			case T_CELL:
 				printf("(");
 				for (;;) {
