@@ -5,22 +5,44 @@ namespace PolyScript
 {
 	namespace Parser
 	{
+		wchar_t output_buffer[512];
+
 		int peek()
 		{
-			int c = getchar();
-			ungetc(c, stdin);
-			return c;
+			if (PolyScript::evaluating_a_script)
+			{
+				return PolyScript::string_under_evaluation[PolyScript::string_pointer];
+			}
+			else 
+			{
+				int c = getchar();
+				ungetc(c, stdin);
+				return c;
+			}
+
+		}
+
+		int get_next_char()
+		{
+			if (PolyScript::evaluating_a_script)
+			{
+				return PolyScript::string_under_evaluation[PolyScript::string_pointer++];
+			}
+			else
+			{
+				return getchar();
+			}
 		}
 
 		// Skips the input until newline is found. Newline is one of \r, \r\n or \n.
 		void skip_line(void) {
 			for (;;) {
-				int c = getchar();
-				if (c == EOF || c == '\n')
+				int c = get_next_char();
+				if (c == EOF || c == '\n' || c == '\0')
 					return;
 				if (c == '\r') {
 					if (peek() == '\n')
-						getchar();
+						get_next_char();
 					return;
 				}
 			}
@@ -28,7 +50,7 @@ namespace PolyScript
 
 		int read_number(int val) {
 			while (isdigit(peek()))
-				val = val * 10 + (getchar() - '0');
+				val = val * 10 + (get_next_char() - '0');
 			return val;
 		}
 
@@ -57,7 +79,7 @@ namespace PolyScript
 				else if (peek() == '-')
 					negative_flag = true;
 
-				buf[len++] = getchar();
+				buf[len++] = get_next_char();
 			}
 
 			if (decimal_flag)
@@ -73,7 +95,7 @@ namespace PolyScript
 			while (isalnum(peek()) || peek() == '-') {
 				if (SYMBOL_MAX_LEN <= len)
 					error("Symbol name too long");
-				buf[len++] = getchar();
+				buf[len++] = get_next_char();
 			}
 			buf[len] = '\0';
 			return Object::intern(buf);
@@ -118,10 +140,11 @@ namespace PolyScript
 		// Reads a line from the console.
 		Object *read(void) {
 			for (;;) {
-				int c = getchar();
+				int c = get_next_char();
+
 				if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
 					continue;
-				if (c == EOF)
+				if (c == EOF || c == '\0')
 					return NULL;
 				if (c == ';') {
 					skip_line();
@@ -177,11 +200,6 @@ namespace PolyScript
 				}
 				printf(")");
 				return;
-				/*
-			case T_SYMBOL:
-				printf("%s", obj->name);
-				return;
-				*/
 			case T_PRIMITIVE:
 				printf("<primitive>");
 				return;
@@ -196,6 +214,82 @@ namespace PolyScript
 					printf("()");
 				else if (obj == True)
 					printf("t");
+				else
+					error("Bug: print: Unknown subtype: %d", obj->subtype);
+				return;
+			default:
+				error("Bug: print: Unknown tag type: %d", obj->tag);
+			}
+		}
+		void win_debug_print(Object * obj)
+		{
+			// Prints the given object.
+			memset(output_buffer, 0x00, 512);
+
+			switch (obj->tag) {
+
+			case T_ATOM:
+				switch (obj->atom_subtype)
+				{
+				case AT_INT:
+					swprintf(output_buffer, L"%d", obj->value);
+					OutputDebugStringW(LPCWSTR(output_buffer));
+					return;
+				case AT_FLOAT:
+					swprintf(output_buffer, L"%f", obj->float_value);
+					OutputDebugStringW(LPCWSTR(output_buffer));
+					return;
+				case AT_SYMBOL:
+					// Convert obj->name to a WCHAR
+					wchar_t tmp[512];
+					mbstowcs(tmp, obj->name, 512);
+					swprintf(output_buffer,  L"%s", tmp);
+					OutputDebugStringW(LPCWSTR(output_buffer));
+					return;
+				}
+
+			case T_CELL:
+				swprintf(output_buffer, L"(");
+				for (;;) {
+					print(obj->car);
+					if (obj->cdr == Nil)
+						break;
+					if (obj->cdr->tag != T_CELL) {
+						swprintf(output_buffer, L" . ");
+						OutputDebugStringW(LPCWSTR(output_buffer));
+						print(obj->cdr);
+						break;
+					}
+					swprintf(output_buffer, L" ");
+					OutputDebugStringW(LPCWSTR(output_buffer));
+					obj = obj->cdr;
+				}
+				swprintf(output_buffer, L")");
+				OutputDebugStringW(LPCWSTR(output_buffer));
+				return;
+			case T_PRIMITIVE:
+				swprintf(output_buffer,  L"<primitive>");
+				OutputDebugStringW(LPCWSTR(output_buffer));
+				return;
+			case T_FUNCTION:
+				swprintf(output_buffer, L"<function>");
+				OutputDebugStringW(LPCWSTR(output_buffer));
+				return;
+			case T_MACRO:
+				swprintf(output_buffer, L"<macro>");
+				OutputDebugStringW(LPCWSTR(output_buffer));
+				return;
+			case T_SPECIAL:
+				if (obj == Nil)
+				{
+					swprintf(output_buffer, L"()");
+					OutputDebugStringW(LPCWSTR(output_buffer));
+				}
+				else if (obj == True)
+				{
+					swprintf(output_buffer, L"t");
+					OutputDebugStringW(LPCWSTR(output_buffer));
+				}
 				else
 					error("Bug: print: Unknown subtype: %d", obj->subtype);
 				return;

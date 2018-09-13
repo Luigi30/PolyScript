@@ -2,6 +2,8 @@
 #include "Primitives.h"
 #include "Evaluator.h"
 
+#include <Windows.h>
+
 namespace PolyScript
 {
 	namespace Primitives

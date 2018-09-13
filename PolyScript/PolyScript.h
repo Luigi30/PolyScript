@@ -20,10 +20,18 @@ namespace PolyScript
 	extern Object *Cparen;
 	extern Object *True;
 
+	extern Object *env;
+
+	void Initialize();
+	void EvaluateString(const char *line);
+
+	extern char string_under_evaluation[65536];
+	extern int string_pointer;
+	extern bool evaluating_a_script;
+
 	typedef enum ObjectTag {
 		T_ATOM,
 		T_CELL,
-		//T_SYMBOL,
 		T_PRIMITIVE,
 		T_FUNCTION,
 		T_MACRO,

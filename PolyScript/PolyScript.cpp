@@ -14,6 +14,12 @@ PolyScript::Object * PolyScript::Dot;
 PolyScript::Object * PolyScript::Cparen;
 PolyScript::Object * PolyScript::True;
 
+PolyScript::Object * PolyScript::env;
+
+char PolyScript::string_under_evaluation[65536];
+int PolyScript::string_pointer = 0;
+bool PolyScript::evaluating_a_script = false;
+
 void PolyScript::error(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
@@ -23,24 +29,45 @@ void PolyScript::error(const char *fmt, ...) {
 	exit(1);
 }
 
-int main()
+void PolyScript::Initialize()
 {
 	PolyScript::Nil = PolyScript::Object::MakeSpecial(PolyScript::T_NIL);
 	PolyScript::Dot = PolyScript::Object::MakeSpecial(PolyScript::T_DOT);
 	PolyScript::Cparen = PolyScript::Object::MakeSpecial(PolyScript::T_CPAREN);
 	PolyScript::True = PolyScript::Object::MakeSpecial(PolyScript::T_TRUE);
-	
+
 	PolyScript::obarray = PolyScript::Nil;
 
-	PolyScript::Object *env = PolyScript::Object::MakeEnv(PolyScript::Nil, NULL);
+	env = PolyScript::Object::MakeEnv(PolyScript::Nil, NULL);
 
 	PolyScript::Primitives::create_primitives(env);
+}
+
+void PolyScript::EvaluateString(const char *line)
+{
+	PolyScript::evaluating_a_script = true;
+	strcpy(PolyScript::string_under_evaluation, line);
+
+	PolyScript::Object *expr = PolyScript::Parser::read();
+	PolyScript::Parser::win_debug_print(PolyScript::Evaluator::eval(PolyScript::env, expr));
+	OutputDebugStringW(L"\n");
+
+	PolyScript::evaluating_a_script = false;
+}
+
+int main()
+{
+	PolyScript::Initialize();
+
+	PolyScript::EvaluateString("(plus 2 2)");
 
 	while (true)
 	{
 		printf("> ");
 		PolyScript::Object *expr = PolyScript::Parser::read();
-		PolyScript::Parser::print(PolyScript::Evaluator::eval(env, expr));
+		//PolyScript::Parser::print(PolyScript::Evaluator::eval(PolyScript::env, expr));
+		PolyScript::Parser::win_debug_print(PolyScript::Evaluator::eval(PolyScript::env, expr));
+		OutputDebugStringW(L"\n");
 
 		printf("\n");
 	}
