@@ -21,17 +21,17 @@ namespace PolyScript
 
 			for (Object *args = Evaluator::eval_list(env, list); args != Nil; args = args->cdr) {
 				
-				if (args->car->tag == T_INT)
+				if(args->car->tag != T_ATOM)
+					error("+ takes only numbers");
+
+				if (args->car->atom_subtype == T_INT)
 					sum += args->car->value;
 
-				else if (args->car->tag == T_FLOAT)
+				else if (args->car->atom_subtype == T_FLOAT)
 				{
 					sum += args->car->float_value;
 					promote_to_float = true;
 				}
-					
-				else
-					error("+ takes only numbers");
 			}
 
 			if (promote_to_float)
@@ -64,7 +64,7 @@ namespace PolyScript
 
 		// (setq <symbol> expr)
 		static Object *Setq(Object *env, Object *list) {
-			if (Evaluator::list_length(list) != 2 || list->car->tag != T_SYMBOL)
+			if (Evaluator::list_length(list) != 2 || (list->car->tag != T_ATOM && list->car->atom_subtype == AT_SYMBOL))
 				error("Malformed setq");
 			Object *bind = Evaluator::find(env, list->car);
 			if (!bind)
@@ -76,7 +76,7 @@ namespace PolyScript
 
 		// (define <symbol> expr)
 		static Object *Define(Object *env, Object *list) {
-			if (Evaluator::list_length(list) != 2 || list->car->tag != T_SYMBOL)
+			if (Evaluator::list_length(list) != 2 || (list->car->tag != T_ATOM && list->car->atom_subtype == AT_SYMBOL))
 				error("Malformed setq");
 			Object *sym = list->car;
 			Object *value = Evaluator::eval(env, list->cdr->car);

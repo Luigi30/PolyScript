@@ -23,14 +23,21 @@ namespace PolyScript
 	typedef enum ObjectTag {
 		T_INT = 1,
 		T_FLOAT,
+		T_ATOM,
 		T_CELL,
-		T_SYMBOL,
+		//T_SYMBOL,
 		T_PRIMITIVE,
 		T_FUNCTION,
 		T_MACRO,
 		T_ENV,
 		T_SPECIAL
 	} ObjectTag;
+
+	typedef enum AtomSubtype {
+		AT_INT = 1,
+		AT_FLOAT,
+		AT_SYMBOL,
+	} AtomSubtype;
 
 	// Subtypes for TSPECIAL
 	typedef enum {
@@ -43,6 +50,9 @@ namespace PolyScript
 	// A Lisp object. Its contents depend on the union type.
 	typedef struct Object {
 		ObjectTag tag;
+
+		// If an ATOM, it has a subtype
+		AtomSubtype atom_subtype;
 
 		// The size of this Object.
 		size_t size;
@@ -100,7 +110,8 @@ namespace PolyScript
 		// Constructors.
 		static Object *MakeInt(int value)
 		{
-			Object *r = alloc(T_INT, sizeof(int));
+			Object *r = alloc(T_ATOM, sizeof(int));
+			r->atom_subtype = AT_INT;
 			r->value = value;
 			return r;
 		}
@@ -108,16 +119,18 @@ namespace PolyScript
 		static Object *MakeFloat(double value)
 		{
 			Object *r = alloc(T_FLOAT, sizeof(double));
+			r->atom_subtype = AT_FLOAT;
 			r->float_value = value;
 			return r;
 		}
 
 		static Object *MakeSymbol(const char *name) {
-			Object *sym = alloc(T_SYMBOL, strlen(name) + 1);
+			Object *sym = alloc(T_ATOM, strlen(name) + 1);
+			sym->atom_subtype = AT_SYMBOL;
 
 			char *dup = _strdup(name);
-
 			sym->name = dup;
+
 			return sym;
 		}
 

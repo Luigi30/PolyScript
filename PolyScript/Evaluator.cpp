@@ -95,7 +95,7 @@ namespace PolyScript
 
 		// Expands the given macro application form.
 		Object *macroexpand(Object *env, Object *obj) {
-			if (obj->tag != T_CELL || obj->car->tag != T_SYMBOL)
+			if (obj->tag != T_CELL || (obj->car->tag != T_ATOM && obj->car->atom_subtype == AT_SYMBOL))
 				return obj;
 			Object *bind = find(env, obj->car);
 			if (!bind || bind->cdr->tag != T_MACRO)
@@ -111,7 +111,7 @@ namespace PolyScript
 			if (list->tag != T_CELL || !is_list(list->car) || list->cdr->tag != T_CELL)
 				error("Malformed lambda");
 			for (Object *p = list->car; p != Nil; p = p->cdr) {
-				if (p->car->tag != T_SYMBOL)
+				if (p->car->tag != T_ATOM && p->car->atom_subtype == AT_SYMBOL)
 					error("Parameter must be a symbol");
 				if (!is_list(p->cdr))
 					error("Parameter list is not a flat list");
@@ -122,7 +122,7 @@ namespace PolyScript
 		}
 
 		Object *handle_defun(Object *env, Object *list, ObjectTag type) {
-			if (list->car->tag != T_SYMBOL || list->cdr->tag != T_CELL)
+			if ((list->car->tag != T_ATOM && list->car->atom_subtype == AT_SYMBOL) || list->cdr->tag != T_CELL)
 				error("Malformed defun");
 			Object *sym = list->car;
 			Object *rest = list->cdr;
@@ -134,6 +134,21 @@ namespace PolyScript
 		// Evaluates the S expression.
 		Object *eval(Object *env, Object *obj) {
 			switch (obj->tag) {
+
+			case T_ATOM:
+				switch (obj->atom_subtype)
+				{
+				case AT_INT:
+				case AT_FLOAT:
+					return obj; // Self-evaluating
+				case AT_SYMBOL:
+					// Variable
+					Object *bind = find(env, obj);
+					if (!bind)
+						error("Undefined symbol: %s", obj->name);
+					return bind->cdr;
+				}
+
 			case T_INT:
 			case T_FLOAT:
 			case T_PRIMITIVE:
@@ -141,6 +156,7 @@ namespace PolyScript
 			case T_SPECIAL:
 				// Self-evaluating objects
 				return obj;
+				/*
 			case T_SYMBOL: {
 				// Variable
 				Object *bind = find(env, obj);
@@ -148,6 +164,7 @@ namespace PolyScript
 					error("Undefined symbol: %s", obj->name);
 				return bind->cdr;
 			}
+				*/
 			case T_CELL: {
 				// Function application form
 				Object *expanded = macroexpand(env, obj);

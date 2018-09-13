@@ -3,3 +3,9 @@
 ################################################################################
 
 /.vs
+/PolyScript/Debug/PolyScript.tlog
+/Debug
+/PolyScript/Debug
+/PolyScript/x64/Debug/PolyScript.tlog
+/PolyScript/x64/Debug
+/x64/Debug

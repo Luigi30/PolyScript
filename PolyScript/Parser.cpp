@@ -146,6 +146,21 @@ namespace PolyScript
 		// Prints the given object.
 		void print(Object *obj) {
 			switch (obj->tag) {
+
+			case T_ATOM:
+				switch (obj->atom_subtype)
+				{
+				case AT_INT:
+					printf("%d", obj->value);
+					return;
+				case AT_FLOAT:
+					printf("%f", obj->float_value);
+					return;
+				case AT_SYMBOL:
+					printf("%s", obj->name);
+					return;
+				}
+
 			case T_INT:
 				printf("%d", obj->value);
 				return;
@@ -168,9 +183,11 @@ namespace PolyScript
 				}
 				printf(")");
 				return;
+				/*
 			case T_SYMBOL:
 				printf("%s", obj->name);
 				return;
+				*/
 			case T_PRIMITIVE:
 				printf("<primitive>");
 				return;
