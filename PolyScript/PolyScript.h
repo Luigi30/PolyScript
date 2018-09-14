@@ -44,6 +44,7 @@ namespace PolyScript
 		AT_INT = 1,
 		AT_FLOAT,
 		AT_SYMBOL,
+		AT_STRING,
 	} AtomSubtype;
 
 	// Subtypes for TSPECIAL
@@ -67,10 +68,10 @@ namespace PolyScript
 		// The possible values of an Object.
 		union
 		{
-			// T_INT
-			int value;
+			// AT_INT
+			int int_value;
 
-			// T_FLOAT
+			// AT_FLOAT
 			double float_value;
 
 			// T_CELL
@@ -81,6 +82,9 @@ namespace PolyScript
 
 			// T_SYMBOL
 			char *name;
+
+			// T_STRING
+			char *str_value;
 
 			// T_PRIMITIVE
 			Primitive *fn;
@@ -118,7 +122,7 @@ namespace PolyScript
 		// Allocate a new Object.
 		static Object *alloc(ObjectTag type, size_t size)
 		{
-			size += offsetof(Object, value);
+			size += offsetof(Object, int_value);
 
 			// Allocate an object.
 			Object *obj = (Object *)malloc(size);
@@ -132,7 +136,7 @@ namespace PolyScript
 		{
 			Object *r = alloc(T_ATOM, sizeof(int));
 			r->atom_subtype = AT_INT;
-			r->value = value;
+			r->int_value = value;
 			return r;
 		}
 
@@ -144,11 +148,23 @@ namespace PolyScript
 			return r;
 		}
 
+		static Object *MakeString(const char *str)
+		{
+			Object *r = alloc(T_ATOM, sizeof(double));
+			r->atom_subtype = AT_STRING;
+			
+			char *dup = _strdup(str);
+			r->str_value = dup;
+
+			return r;
+		}
+
 		static Object *MakeSymbol(const char *name) {
 			Object *sym = alloc(T_ATOM, strlen(name) + 1);
 			sym->atom_subtype = AT_SYMBOL;
 
 			char *dup = _strdup(name);
+			dup = _strupr(dup);
 			sym->name = dup;
 
 			return sym;
@@ -201,10 +217,13 @@ namespace PolyScript
 		// May create a new symbol. If there's a symbol with the same name, it will not create a new symbol
 		// but return the existing one.
 		static Object *intern(const char *name) {
+			char *tmp = _strdup(name);
+			tmp = _strupr(tmp);
+
 			for (Object *p = obarray; p != Nil; p = p->cdr)
-				if (strcmp(name, p->car->name) == 0)
+				if (strcmp(tmp, p->car->name) == 0)
 					return p->car;
-			Object *sym = Object::MakeSymbol(name);
+			Object *sym = Object::MakeSymbol(tmp);
 			obarray = Object::cons(sym, obarray);
 			return sym;
 		}

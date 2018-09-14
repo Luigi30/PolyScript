@@ -54,6 +54,32 @@ namespace PolyScript
 			return val;
 		}
 
+		Object * read_string()
+		{
+			// read until we find another "
+			char buf[STRING_MAX_LEN];
+			int len = 0;
+
+			while (peek() != '"' && peek() != '\0' && peek() != '\r' && peek() != '\n')
+			{
+				if (len >= STRING_MAX_LEN)
+				{
+					error("String too long");
+					return NULL;
+				}
+
+				buf[len++] = get_next_char();
+			}
+
+			buf[len++] = '\0';
+
+			// dispose of ending "
+			if (peek() == '"')
+				get_next_char();
+
+			return Object::MakeString(buf);
+		}
+
 		Object * read_numeric_string(char c)
 		{
 			// parse the string and figure out if it's a float or an int.
@@ -95,7 +121,7 @@ namespace PolyScript
 			while (isalnum(peek()) || peek() == '-' || peek() == '=') {
 				if (SYMBOL_MAX_LEN <= len)
 					error("Symbol name too long");
-				buf[len++] = get_next_char();
+				buf[len++] = toupper(get_next_char());
 			}
 			buf[len] = '\0';
 			return Object::intern(buf);
@@ -162,6 +188,8 @@ namespace PolyScript
 					return Cparen;
 				if (c == '.')
 					return Dot;
+				if (c == '"')
+					return read_string();
 				if (c == '\'')
 					return read_quote();
 				if (isdigit(c) || c == '-')
@@ -183,12 +211,15 @@ namespace PolyScript
 				switch (obj->atom_subtype)
 				{
 				case AT_INT:
-					printf("%d", obj->value);
+					printf("%d", obj->int_value);
 					return;
 				case AT_FLOAT:
 					printf("%f", obj->float_value);
 					return;
 				case AT_SYMBOL:
+					printf("%s", obj->name);
+					return;
+				case AT_STRING:
 					printf("%s", obj->name);
 					return;
 				}
@@ -241,7 +272,7 @@ namespace PolyScript
 				switch (obj->atom_subtype)
 				{
 				case AT_INT:
-					swprintf(output_buffer, L"%d", obj->value);
+					swprintf(output_buffer, L"%d", obj->int_value);
 					OutputDebugStringW(LPCWSTR(output_buffer));
 					return;
 				case AT_FLOAT:

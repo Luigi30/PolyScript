@@ -32,7 +32,7 @@ namespace PolyScript
 					error("+ takes only numbers");
 
 				if (args->car->atom_subtype == AT_INT)
-					sum += args->car->value;
+					sum += args->car->int_value;
 				else if (args->car->atom_subtype == AT_FLOAT)
 				{
 					sum += args->car->float_value;
@@ -64,7 +64,7 @@ namespace PolyScript
 				if (first_number)
 				{
 					if (args->car->atom_subtype == AT_INT)
-						sum += args->car->value;
+						sum += args->car->int_value;
 					else if (args->car->atom_subtype == AT_FLOAT)
 					{
 						sum += args->car->float_value;
@@ -76,7 +76,7 @@ namespace PolyScript
 
 				else {
 					if (args->car->atom_subtype == AT_INT)
-						sum -= args->car->value;
+						sum -= args->car->int_value;
 					else if (args->car->atom_subtype == AT_FLOAT)
 					{
 						sum -= args->car->float_value;
@@ -105,7 +105,7 @@ namespace PolyScript
 
 				else {
 					if (args->car->atom_subtype == AT_INT)
-						sum *= args->car->value;
+						sum *= args->car->int_value;
 					else if (args->car->atom_subtype == AT_FLOAT)
 					{
 						sum *= args->car->float_value;
@@ -226,7 +226,7 @@ namespace PolyScript
 				{
 				case AT_INT:
 				case AT_FLOAT:
-					return x->value == y->value ? True : Nil;
+					return x->int_value == y->int_value ? True : Nil;
 				case AT_SYMBOL:
 					return x->name == y->name ? True : Nil;
 				default:
@@ -264,7 +264,7 @@ namespace PolyScript
 				{
 				case AT_INT:
 				case AT_FLOAT:
-					return x->value > y->value ? True : Nil;
+					return x->int_value > y->int_value ? True : Nil;
 				case AT_SYMBOL:
 					return x->name > y->name ? True : Nil;
 				}
@@ -303,7 +303,7 @@ namespace PolyScript
 				{
 				case AT_INT:
 				case AT_FLOAT:
-					return x->value >= y->value ? True : Nil;
+					return x->int_value >= y->int_value ? True : Nil;
 				case AT_SYMBOL:
 					return x->name >= y->name ? True : Nil;
 				}
@@ -342,7 +342,7 @@ namespace PolyScript
 				{
 				case AT_INT:
 				case AT_FLOAT:
-					return x->value < y->value ? True : Nil;
+					return x->int_value < y->int_value ? True : Nil;
 				case AT_SYMBOL:
 					return x->name < y->name ? True : Nil;
 				}
@@ -381,7 +381,7 @@ namespace PolyScript
 				{
 				case AT_INT:
 				case AT_FLOAT:
-					return x->value <= y->value ? True : Nil;
+					return x->int_value <= y->int_value ? True : Nil;
 				case AT_SYMBOL:
 					return x->name <= y->name ? True : Nil;
 				}
@@ -514,7 +514,7 @@ namespace PolyScript
 				error("Argument is not a number");
 				return NULL;
 			}
-			else if (val->IsAtomSubtype(AT_INT) && val->value == 0)
+			else if (val->IsAtomSubtype(AT_INT) && val->int_value == 0)
 				return True;
 			else if (val->IsAtomSubtype(AT_FLOAT) && val->float_value == 0)
 				return True;
@@ -538,7 +538,7 @@ namespace PolyScript
 				error("Argument is not a number");
 				return NULL;
 			}
-			else if (val->IsAtomSubtype(AT_INT) && val->value > 0)
+			else if (val->IsAtomSubtype(AT_INT) && val->int_value > 0)
 				return True;
 			else if (val->IsAtomSubtype(AT_FLOAT) && val->float_value > 0)
 				return True;
@@ -562,7 +562,7 @@ namespace PolyScript
 				error("Argument is not a number");
 				return NULL;
 			}
-			else if (val->IsAtomSubtype(AT_INT) && val->value < 0)
+			else if (val->IsAtomSubtype(AT_INT) && val->int_value < 0)
 				return True;
 			else if (val->IsAtomSubtype(AT_FLOAT) && val->float_value < 0)
 				return True;
