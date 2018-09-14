@@ -42,12 +42,51 @@ namespace PolyScript
 			return r;
 		}
 
+		// Evaluates one element of a list and returns it.
+		Object * eval_list_element(Object *env, Object *list, int element)
+		{
+			Object *head = NULL;
+			Object *tail = NULL;
+
+			int i = -1;
+
+			for (Object *lp = list; lp != Nil; lp = lp->cdr) {
+
+				i++;
+
+				if (element != i)
+				{
+					continue;
+				}
+
+				Object *tmp = eval(env, lp->car);
+
+				if (error_flag)
+					return NULL;
+
+				if (head == NULL) {
+					head = tail = Object::cons(tmp, Nil);
+				}
+				else {
+					tail->cdr = Object::cons(tmp, Nil);
+					tail = tail->cdr;
+				}
+			}
+			if (head == NULL)
+				return Nil;
+			return head;
+		}
+
 		// Evaluates all the list elements and returns their return values as a new list.
 		Object *eval_list(Object *env, Object *list) {
 			Object *head = NULL;
 			Object *tail = NULL;
 			for (Object *lp = list; lp != Nil; lp = lp->cdr) {
 				Object *tmp = eval(env, lp->car);
+
+				if (error_flag)
+					return NULL;
+
 				if (head == NULL) {
 					head = tail = Object::cons(tmp, Nil);
 				}
@@ -79,6 +118,7 @@ namespace PolyScript
 				return progn(newenv, body);
 			}
 			error("not supported");
+			return NULL;
 		}
 
 		// Searches for a variable by symbol. Returns null if not found.
@@ -133,6 +173,9 @@ namespace PolyScript
 
 		// Evaluates the S expression.
 		Object *eval(Object *env, Object *obj) {
+			if (error_flag)
+				return NULL;
+
 			switch (obj->tag) {
 
 			case T_ATOM:
@@ -145,7 +188,11 @@ namespace PolyScript
 					// Variable
 					Object *bind = find(env, obj);
 					if (!bind)
+					{
 						error("Undefined symbol: %s", obj->name);
+						return NULL;
+					}
+					
 					return bind->cdr;
 				}
 
@@ -162,12 +209,16 @@ namespace PolyScript
 				Object *fn = eval(env, obj->car);
 				Object *args = obj->cdr;
 				if (fn->tag != PolyScript::T_PRIMITIVE && fn->tag != PolyScript::T_FUNCTION)
+				{
 					error("The head of a list must be a function");
+					return NULL;
+				}
 				return apply(env, fn, args);
 			}
 			default:
 				error("Bug: eval: Unknown tag type: %d", obj->tag);
-			}
+				return NULL;
+			}  
 		}
 	}
 }

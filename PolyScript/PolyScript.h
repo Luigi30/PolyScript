@@ -10,6 +10,7 @@
 namespace PolyScript
 {
 	void error(const char *fmt, ...);
+	extern bool error_flag;
 
 	typedef struct Object *Primitive(struct Object *env, struct Object *args);
 
@@ -103,10 +104,15 @@ namespace PolyScript
 
 		bool IsAtomSubtype(AtomSubtype subtype)
 		{
-			if (tag == T_ATOM && subtype == subtype)
+			if (tag == T_ATOM && this->subtype == subtype)
 				return true;
 			else
 				return false;
+		}
+
+		bool IsNumber()
+		{
+			return tag == T_ATOM && (subtype == AT_INT || subtype == AT_FLOAT);
 		}
 
 		// Allocate a new Object.

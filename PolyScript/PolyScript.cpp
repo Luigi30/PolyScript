@@ -16,6 +16,8 @@ PolyScript::Object * PolyScript::True;
 
 PolyScript::Object * PolyScript::env;
 
+bool PolyScript::error_flag;
+
 char PolyScript::string_under_evaluation[65536];
 int PolyScript::string_pointer = 0;
 bool PolyScript::evaluating_a_script = false;
@@ -26,7 +28,9 @@ void PolyScript::error(const char *fmt, ...) {
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 	va_end(ap);
-	exit(1);
+	//exit(1);
+
+	error_flag = true;
 }
 
 void PolyScript::Initialize()
@@ -59,17 +63,22 @@ int main()
 {
 	PolyScript::Initialize();
 
-	PolyScript::EvaluateString("(plus 2 2)");
+	//PolyScript::EvaluateString("(if (eq 4 4) (plus 2 2))");
+	//printf("\n");
 
 	while (true)
 	{
+		PolyScript::error_flag = false;
+
 		printf("> ");
 		PolyScript::Object *expr = PolyScript::Parser::read();
-		//PolyScript::Parser::print(PolyScript::Evaluator::eval(PolyScript::env, expr));
-		PolyScript::Parser::win_debug_print(PolyScript::Evaluator::eval(PolyScript::env, expr));
-		OutputDebugStringW(L"\n");
-
+		if(!PolyScript::error_flag)
+			PolyScript::Parser::print(PolyScript::Evaluator::eval(PolyScript::env, expr));
 		printf("\n");
+
+		//PolyScript::Parser::win_debug_print(PolyScript::Evaluator::eval(PolyScript::env, expr));
+		//OutputDebugStringW(L"\n");
+		
 	}
 
     return 0;

@@ -17,8 +17,6 @@ namespace PolyScript
 		int peek();
 		void skip_line(void);
 
-		Object * read_string_input(const char *str);
-
 		Object * read_numeric_string(char c);
 		Object * read_symbol(char c);
 		Object * read_quote(void);

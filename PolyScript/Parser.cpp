@@ -92,7 +92,7 @@ namespace PolyScript
 			char buf[SYMBOL_MAX_LEN + 1];
 			int len = 1;
 			buf[0] = c;
-			while (isalnum(peek()) || peek() == '-') {
+			while (isalnum(peek()) || peek() == '-' || peek() == '=') {
 				if (SYMBOL_MAX_LEN <= len)
 					error("Symbol name too long");
 				buf[len++] = get_next_char();
@@ -110,6 +110,9 @@ namespace PolyScript
 
 		// Reads a list. Note that '(' has already been read.
 		Object *read_list(void) {
+			if (error_flag)
+				return NULL;
+
 			Object *obj = read();
 			if (!obj)
 				error("Unclosed parenthesis");
@@ -140,6 +143,9 @@ namespace PolyScript
 		// Reads a line from the console.
 		Object *read(void) {
 			for (;;) {
+				if (error_flag)
+					return NULL;
+
 				int c = get_next_char();
 
 				if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
@@ -160,7 +166,7 @@ namespace PolyScript
 					return read_quote();
 				if (isdigit(c) || c == '-')
 					return read_numeric_string(c);
-				if (isalpha(c) || strchr("+=!@#$%^&*", c))
+				if (isalpha(c) || strchr("+><=!@#$%^&*", c))
 					return read_symbol(c);
 				error("Don't know how to handle %c", c);
 			}
@@ -168,6 +174,9 @@ namespace PolyScript
 
 		// Prints the given object.
 		void print(Object *obj) {
+			if (error_flag)
+				return;
+
 			switch (obj->tag) {
 
 			case T_ATOM:

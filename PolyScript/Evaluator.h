@@ -13,6 +13,7 @@ namespace PolyScript
 		Object *push_env(Object *env, Object *vars, Object *values);
 		Object *progn(Object *env, Object *list);
 		Object *eval_list(Object *env, Object *list);
+		Object *eval_list_element(Object *env, Object *list, int element);
 		bool is_list(Object *obj);
 		Object *apply(Object *env, Object *fn, Object *args);
 		Object *find(Object *env, Object *sym);
